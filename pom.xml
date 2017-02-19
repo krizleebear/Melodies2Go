@@ -4,17 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.gps.ilp</groupId>
-    <artifactId>ItunesLibraryParser</artifactId>
+    <groupId>de.christianleberfinger.melodies2go</groupId>
+    <artifactId>MelodiesToGo</artifactId>
     <packaging>pom</packaging>
-    <version>2.0.0</version>
+    <version>1.0.0</version>
 
-    <description>
-        <![CDATA[
-            Itunes Library Parser can parse the Itunes library, read the Tracks & Playlists as Java objects and thereby
-            perform all sorts of operations on the files such as read itunes stored data about the tracks and playlists.
-        ]]>
-    </description>
+    <description>Melodies2Go is a tool to assemble relevant subsets of your iTunes music collection.</description>
 
     <modules>
         <module>parser</module>
@@ -41,6 +36,13 @@
             <version>6.1.1</version>
             <scope>test</scope>
         </dependency>
+        
+        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+		<dependency>
+		    <groupId>com.google.guava</groupId>
+		    <artifactId>guava</artifactId>
+		    <version>20.0</version>
+		</dependency>
     </dependencies>
 
     <build>
