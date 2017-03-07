@@ -9,12 +9,8 @@
     <packaging>pom</packaging>
     <version>1.0.0</version>
 
-    <description>Melodies2Go is a tool to assemble relevant subsets of your iTunes music collection.</description>
+    <description>Melodies2Go is a tool to collect your favorite songs. More technically: It assembles relevant subsets of your iTunes music collection.</description>
 
-    <modules>
-        <module>parser</module>
-        <module>utils</module>
-    </modules>
 
     <dependencies>
         <dependency>
@@ -79,4 +75,5 @@
         </plugins>
     </build>
 
+    <name>Melodies2Go</name>
 </project>

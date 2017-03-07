@@ -217,4 +217,10 @@ public class RatedTrack extends Track
 		return builder.toString();
 	}
 
+	public boolean isDisabled()
+	{
+		String additionalInfo = getAdditionalInfo("Disabled");
+		return "true".equals(additionalInfo);
+	}
+
 }

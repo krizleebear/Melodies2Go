@@ -92,10 +92,10 @@ public class Melodies2Go
 		List<RatedTrack> trackList = new ArrayList<>(tracks.length);
 		for (Track track : tracks)
 		{
-			final RatedTrack sortedTrack = new RatedTrack(track);
+			final RatedTrack ratedTrack = new RatedTrack(track);
 
 			// ignore tracks without valid file information
-			File trackFile = sortedTrack.getFile();
+			File trackFile = ratedTrack.getFile();
 			if (trackFile == null || !trackFile.exists()
 					|| trackFile.isDirectory())
 			{
@@ -103,12 +103,18 @@ public class Melodies2Go
 			}
 
 			// ignore movies
-			if (sortedTrack.isMovie())
+			if (ratedTrack.isMovie())
+			{
+				continue;
+			}
+			
+			// ignore disabled tracks
+			if (ratedTrack.isDisabled())
 			{
 				continue;
 			}
 
-			trackList.add(sortedTrack);
+			trackList.add(ratedTrack);
 		}
 
 		this.allTracks = trackList;
