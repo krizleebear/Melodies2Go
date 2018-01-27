@@ -1,9 +1,11 @@
 package de.christianleberfinger.melodies2go;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -38,7 +40,7 @@ public class Melodies2Go
 			throws LibraryParseException, NoChildrenException, IOException
 	{
 		long availableCapacityBytes = 7 * FileUtils.ONE_GB;
-		File itunesLibrary = new File("iTunes Library.xml"); //TODO: find path in users home dir
+		File itunesLibrary = findiTunesLibrary();
 
 		Melodies2Go sync = new Melodies2Go();
 		sync.readiTunesLibrary(itunesLibrary);
@@ -235,4 +237,26 @@ public class Melodies2Go
 		System.out.println("Genres : " + tracksByGenre);
 		System.out.println("Years  : " + tracksByYear);
 	}
+	
+	public static File findiTunesLibrary() throws FileNotFoundException
+	{
+		File homeDir = new File(System.getProperty("user.home"));
+		File musicDir = new File(homeDir, "Music");
+		File iTunesDir = new File(musicDir, "iTunes");
+		
+		Iterator<File> files = FileUtils.iterateFiles(iTunesDir, new String[] {"xml"}, true);
+		
+		while(files.hasNext())
+		{
+			File file = files.next();
+			if(file.getName().equals("iTunes Library.xml"))
+			{
+				return file;
+			}
+		}
+		
+		throw new FileNotFoundException("iTunes lib wasn't found in " + homeDir);
+	}
+	
+	
 }
