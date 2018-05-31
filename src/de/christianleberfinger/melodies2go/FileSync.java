@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.NotFileFilter;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
@@ -38,6 +39,8 @@ public class FileSync
 		fillMap();
 
 		deleteDispensableFiles();
+		deleteEmptyFolders();
+
 		copyMissingFiles();
 	}
 
@@ -55,10 +58,12 @@ public class FileSync
 	public File getDestFile(RatedTrack track)
 	{
 		List<String> pathElements = new ArrayList<>();
-		if (Objects.nonNull(track.getArtist()))
+
+		if (Objects.nonNull(track.getArtistPreferred()))
 		{
-			pathElements.add(track.getArtist());
+			pathElements.add(track.getArtistPreferred());
 		}
+
 		if (Objects.nonNull(track.getAlbum()))
 		{
 			pathElements.add(track.getAlbum());
@@ -82,6 +87,23 @@ public class FileSync
 			if (!trackFiles.containsKey(destFile))
 			{
 				FileUtils.forceDelete(destFile);
+			}
+		}
+	}
+
+	private void deleteEmptyFolders() throws IOException
+	{
+		Collection<File> folders = FileUtils.listFilesAndDirs(destDir,
+				FalseFileFilter.INSTANCE, NO_HIDDEN_FILES);
+
+		for (File folder : folders)
+		{
+			if (folder.isDirectory())
+			{
+				if (folder.list().length == 0)
+				{
+					FileUtils.deleteDirectory(folder);
+				}
 			}
 		}
 	}

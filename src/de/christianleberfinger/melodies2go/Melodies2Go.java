@@ -13,7 +13,6 @@ import org.apache.commons.io.FileUtils;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 import com.gps.itunes.lib.exceptions.LibraryParseException;
@@ -63,10 +62,6 @@ public class Melodies2Go
 	private Comparator<RatedTrack> orderByDateAdded = (t1, t2) -> t1
 			.getDateAdded().compareTo(t2.getDateAdded());
 	
-	private Comparator<RatedTrack> orderByFileName = (t1, t2) -> t1
-			.getFile().compareTo(t2.getFile());
-	
-
 	private List<RatedTrack> allTracks;
 
 	/**
@@ -161,34 +156,6 @@ public class Melodies2Go
 		}
 		
 		return new ArrayList<RatedTrack>(combinedList);
-	}
-	
-	public void writeFileList(File listFile, List<RatedTrack> tracks) throws IOException
-	{
-		ArrayList<RatedTrack> orderedByFilename = Lists.newArrayList(tracks);
-		orderedByFilename.sort(orderByFileName);
-		FileUtils.writeLines(new File("trackinfos.txt"), "UTF-8", orderedByFilename );
-		
-		List<String> filePaths = new ArrayList<>(tracks.size());
-		tracks.stream().forEach(
-				track -> filePaths.add(escapeFilename(track.getFile().getAbsolutePath())));
-
-		FileUtils.writeLines(listFile, "UTF-8", filePaths);
-
-		// TODO: copy sorted files to some destination directory, e.g. an SD card
-	}
-
-	private static String escapeFilename(String filename)
-	{
-//		filename = filename.replace("*", "\\*");
-//		filename = filename.replace("[", "\\[");
-//		filename = filename.replace("?", "\\?");
-//		
-//		filename = filename.replaceFirst("/Users/krizleebear/Music/", "+ ");
-		
-		return filename;
-//		return "+ " + filename;
-//		return Pattern.quote(filename);
 	}
 	
 	private static List<RatedTrack> sortList(

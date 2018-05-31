@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Objects;
 
 import com.gps.itunes.lib.items.tracks.Track;
 
@@ -38,6 +39,11 @@ public class RatedTrack extends Track
 	public String getAlbum()
 	{
 		return getAdditionalInfo("Album");
+	}
+	
+	public String getAlbumArtist()
+	{
+		return getAdditionalInfo("Album Artist");
 	}
 	
 	public String getYear()
@@ -228,4 +234,18 @@ public class RatedTrack extends Track
 		return "true".equals(additionalInfo);
 	}
 
+	/**
+	 * @return Returns Album Artist if available. Returns artist if album artist
+	 *         isn't available.
+	 */
+	public String getArtistPreferred()
+	{
+		String artist = getAlbumArtist();
+		if(Objects.isNull(artist))
+		{
+			return getArtist();
+		}
+		
+		return artist;
+	}
 }
