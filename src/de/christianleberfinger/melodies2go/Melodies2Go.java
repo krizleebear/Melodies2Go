@@ -39,20 +39,19 @@ public class Melodies2Go
 	public static void main(String[] args)
 			throws LibraryParseException, NoChildrenException, IOException
 	{
-		long availableCapacityBytes = 7 * FileUtils.ONE_GB;
+		long availableCapacityBytes = 70 * FileUtils.ONE_GB;
+		File deviceRoot = new File("/Volumes/OLDPOD");
+		
 		File itunesLibrary = findiTunesLibrary();
 
 		Melodies2Go sync = new Melodies2Go();
 		sync.readiTunesLibrary(itunesLibrary);
 		
 		List<RatedTrack> filteredTracks = sync.compileSelection(availableCapacityBytes);
-
-		final File listFile = new File("list.txt");
-		sync.writeFileList(listFile, filteredTracks);
-		
 		sync.printStatistics(filteredTracks);
 		
-		System.out.println("rsync --archive --human-readable --progress --files-from \"" + listFile.getAbsolutePath() + "\" / /Volumes/CHLE");
+		FileSync fileSync = new FileSync(filteredTracks, deviceRoot);
+		fileSync.sync();
 	}
 	
 	private Comparator<RatedTrack> orderByRating = (t1, t2) -> Integer

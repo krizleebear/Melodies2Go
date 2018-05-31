@@ -35,6 +35,11 @@ public class RatedTrack extends Track
 		return getAdditionalInfo("Artist");
 	}
 	
+	public String getAlbum()
+	{
+		return getAdditionalInfo("Album");
+	}
+	
 	public String getYear()
 	{
 		return getAdditionalInfo("Year");
