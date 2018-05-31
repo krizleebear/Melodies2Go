@@ -55,18 +55,29 @@ public class FileSync
 		}
 	}
 
+	/**
+	 * Calculates a corresponding file name for the given track. The format will
+	 * be like 'DESTDIR/A/Artist/Album/Song.mp3'
+	 * 
+	 * @param track
+	 * @return
+	 */
 	public File getDestFile(RatedTrack track)
 	{
 		List<String> pathElements = new ArrayList<>();
 
-		if (Objects.nonNull(track.getArtistPreferred()))
-		{
-			pathElements.add(track.getArtistPreferred());
-		}
+		final String artist = track.getArtistPreferred();
+		final String album = track.getAlbum();
 
-		if (Objects.nonNull(track.getAlbum()))
+		if (Objects.nonNull(artist) && artist.length() > 0)
 		{
-			pathElements.add(track.getAlbum());
+			pathElements.add(getInitialCharacterFolder(artist));
+			pathElements.add(artist);
+
+			if (Objects.nonNull(album))
+			{
+				pathElements.add(album);
+			}
 		}
 
 		pathElements.add(track.getFile().getName());
@@ -75,6 +86,19 @@ public class FileSync
 				pathElements.toArray(new String[] {}));
 
 		return p.toFile();
+	}
+
+	private String getInitialCharacterFolder(final String artist)
+	{
+		char firstChar = artist.charAt(0);
+		if (Character.isDigit(firstChar))
+		{
+			return "0-9";
+		}
+
+		firstChar = Character.toUpperCase(firstChar);
+
+		return Character.toString(firstChar);
 	}
 
 	private void deleteDispensableFiles() throws IOException
@@ -98,6 +122,12 @@ public class FileSync
 
 		for (File folder : folders)
 		{
+			// do not delete the destination root directory
+			if (folder.equals(destDir))
+			{
+				continue;
+			}
+
 			if (folder.isDirectory())
 			{
 				if (folder.list().length == 0)
@@ -118,8 +148,34 @@ public class FileSync
 			if (!destFile.exists())
 			{
 				FileUtils.forceMkdir(destFile.getParentFile());
-				FileUtils.copyFile(track.getFile(), destFile);
+
+				copyFile(track, destFile);
 			}
+		}
+	}
+
+	/**
+	 * Copy the given track to its destination path. Copying will be performed
+	 * via temporary file. In case of errors during copying, this temporary file
+	 * will be deleted. In case of sudden program exit, the temporary file will
+	 * stay and will be deleted by the next run of sync().
+	 * 
+	 * @param track
+	 * @param destFile
+	 * @throws IOException
+	 */
+	private void copyFile(RatedTrack track, File destFile) throws IOException
+	{
+		TempFile tempFile = new TempFile(destFile);
+		try
+		{
+			FileUtils.copyFile(track.getFile(), tempFile);
+			tempFile.renameToOriginal();
+		}
+		catch (IOException e)
+		{
+			tempFile.delete();
+			throw e;
 		}
 	}
 }

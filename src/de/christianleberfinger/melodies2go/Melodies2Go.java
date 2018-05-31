@@ -38,8 +38,8 @@ public class Melodies2Go
 	public static void main(String[] args)
 			throws LibraryParseException, NoChildrenException, IOException
 	{
-		long availableCapacityBytes = 70 * FileUtils.ONE_GB;
-		File deviceRoot = new File("/Volumes/OLDPOD");
+		long availableCapacityBytes = 70 * FileUtils.ONE_MB;
+		File deviceRoot = new File("./manualtest");
 		
 		File itunesLibrary = findiTunesLibrary();
 
