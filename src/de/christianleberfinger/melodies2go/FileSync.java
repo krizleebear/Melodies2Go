@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -90,15 +94,19 @@ public class FileSync
 
 	private String getInitialCharacterFolder(final String artist)
 	{
-		char firstChar = artist.charAt(0);
-		if (Character.isDigit(firstChar))
+		if (Character.isDigit(artist.charAt(0)))
 		{
 			return "0-9";
 		}
 
-		firstChar = Character.toUpperCase(firstChar);
-
-		return Character.toString(firstChar);
+		String firstLetter = artist.substring(0, 1);
+		
+		// Normalize special characters like "o with diaeresis" to a simple "o".
+		// Note: This will most likely lead to suboptimal results with Asian
+		// languages
+		firstLetter = Normalizer.normalize(firstLetter, Form.NFD).substring(0, 1);
+		
+		return firstLetter.toUpperCase();
 	}
 
 	private void deleteDispensableFiles() throws IOException
@@ -120,7 +128,11 @@ public class FileSync
 		Collection<File> folders = FileUtils.listFilesAndDirs(destDir,
 				FalseFileFilter.INSTANCE, NO_HIDDEN_FILES);
 
-		for (File folder : folders)
+		// order folders by path depth to also detect orphaned parents
+		List<File> folderList = new ArrayList<>(folders);
+		Collections.sort(folderList, orderByPathDepth.reversed());
+		
+		for (File folder : folderList)
 		{
 			// do not delete the destination root directory
 			if (folder.equals(destDir))
@@ -138,6 +150,17 @@ public class FileSync
 		}
 	}
 
+	private static Comparator<File> orderByPathDepth = new Comparator<File>() {
+		@Override
+		public int compare(File o1, File o2)
+		{
+			int depth1 = o1.toPath().getNameCount();
+			int depth2 = o2.toPath().getNameCount();
+			
+			return Integer.compare(depth1, depth2);
+		}
+	};
+	
 	private void copyMissingFiles() throws IOException
 	{
 		for (Entry<File, RatedTrack> entry : trackFiles.entrySet())
@@ -147,7 +170,10 @@ public class FileSync
 
 			if (!destFile.exists())
 			{
-				FileUtils.forceMkdir(destFile.getParentFile());
+				if (destFile.getParentFile().exists())
+				{
+					FileUtils.forceMkdir(destFile.getParentFile());
+				}
 
 				copyFile(track, destFile);
 			}
