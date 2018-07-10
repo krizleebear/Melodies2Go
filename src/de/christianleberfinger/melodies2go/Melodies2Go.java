@@ -23,6 +23,7 @@ import com.gps.itunes.lib.parser.ItunesLibraryParser;
 import com.gps.itunes.lib.parser.utils.PropertyManager;
 import com.gps.itunes.lib.tasks.LibraryParser;
 
+import de.christianleberfinger.melodies2go.FileSync.SyncedTrack;
 import de.christianleberfinger.melodies2go.utils.CombinedIterator;
 
 /**
@@ -38,8 +39,8 @@ public class Melodies2Go
 	public static void main(String[] args)
 			throws LibraryParseException, NoChildrenException, IOException
 	{
-		long availableCapacityBytes = 70 * FileUtils.ONE_MB;
-		File deviceRoot = new File("./manualtest");
+		long availableCapacityBytes = 50 * FileUtils.ONE_GB;
+		File deviceRoot = new File("/Volumes/chle-privat/");
 		
 		File itunesLibrary = findiTunesLibrary();
 
@@ -50,16 +51,18 @@ public class Melodies2Go
 		sync.printStatistics(filteredTracks);
 		
 		FileSync fileSync = new FileSync(filteredTracks, deviceRoot);
-		fileSync.sync();
+		List<SyncedTrack> syncedTracks = fileSync.sync();
+		
+		M3UWriter.writeRecentlyAdded(deviceRoot, syncedTracks);
 	}
 	
-	private Comparator<RatedTrack> orderByRating = (t1, t2) -> Integer
+	public static Comparator<RatedTrack> orderByRating = (t1, t2) -> Integer
 			.compare(t1.getRating(), t2.getRating());
 
-	private Comparator<RatedTrack> orderByPlayCount = (t1, t2) -> Integer
+	public static Comparator<RatedTrack> orderByPlayCount = (t1, t2) -> Integer
 			.compare(t1.getPlayCount(), t2.getPlayCount());
 
-	private Comparator<RatedTrack> orderByDateAdded = (t1, t2) -> t1
+	public static Comparator<RatedTrack> orderByDateAdded = (t1, t2) -> t1
 			.getDateAdded().compareTo(t2.getDateAdded());
 	
 	private List<RatedTrack> allTracks;
@@ -170,6 +173,8 @@ public class Melodies2Go
 
 	private void printStatistics(List<RatedTrack> filteredTracks)
 	{
+		System.out.println("Number of tracks: " + filteredTracks.size());
+		
 		Multiset<String> artists = HashMultiset.create();
 		Multiset<String> years = HashMultiset.create();
 		Multiset<String> genres = HashMultiset.create();

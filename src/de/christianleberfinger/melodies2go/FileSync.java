@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,28 +36,61 @@ public class FileSync
 		this.destDir = destDir;
 	}
 
+	public static class SyncedTrack
+	{
+		public final RatedTrack track;
+		public final File destFile;
+
+		public SyncedTrack(RatedTrack track, File destFile)
+		{
+			this.track = track;
+			this.destFile = destFile;
+		}
+		
+		public static Comparator<SyncedTrack> orderByDateAdded = (t1, t2) -> t1
+				.getDateAdded().compareTo(t2.getDateAdded());
+
+		private Date getDateAdded()
+		{
+			return track.getDateAdded();
+		}
+	}
+	
 	private final static IOFileFilter NO_HIDDEN_FILES = new NotFileFilter(
 			new PrefixFileFilter("."));
 
-	public void sync() throws IOException
+	public List<SyncedTrack> sync() throws IOException
 	{
-		fillMap();
+		System.out.println("Calculating changes to destination file system.");
+		List<SyncedTrack> expectedTracks = fillMap();
 
+		System.out.println("Deleting dispensable files");
 		deleteDispensableFiles();
 		deleteEmptyFolders();
 
+		System.out.println("Copying missing files");
 		copyMissingFiles();
+		
+		System.out.println("Finished sync");
+		
+		return expectedTracks;
 	}
 
-	private void fillMap()
+	private List<SyncedTrack> fillMap()
 	{
+		List<SyncedTrack> expectedTracks = new ArrayList<>(tracks.size());
 		for (RatedTrack track : tracks)
 		{
 			if (track.getFile() != null)
 			{
-				trackFiles.put(getDestFile(track), track);
+				final File destFile = getDestFile(track);
+				
+				expectedTracks.add(new SyncedTrack(track, destFile));
+				trackFiles.put(destFile, track);
 			}
 		}
+		
+		return expectedTracks;
 	}
 
 	/**

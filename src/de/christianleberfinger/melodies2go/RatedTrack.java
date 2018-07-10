@@ -25,10 +25,15 @@ public class RatedTrack extends Track
 	private static ThreadLocalDateParser dateParser = new ThreadLocalDateParser(
 			"EEE MMM d HH:mm:ss zzz yyyy");
 
+	private final Date dateAdded;
+	
 	public RatedTrack(Track track)
 	{
 		super(track.getTrackId(), track.getTrackName(), track.getLocation(),
 				track.getAdditionalTrackInfo());
+		
+		String dateAddedString = getAdditionalInfo(FIELD_DATE_ADDED);
+		dateAdded = parseDateString(dateAddedString);
 	}
 
 	public String getArtist()
@@ -150,9 +155,7 @@ public class RatedTrack extends Track
 	 */
 	public Date getDateAdded()
 	{
-		String dateAddedString = getAdditionalInfo(FIELD_DATE_ADDED);
-
-		return parseDateString(dateAddedString);
+		return dateAdded;
 	}
 
 	public String getTitle()
