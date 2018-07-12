@@ -39,8 +39,20 @@ public class Melodies2Go
 	public static void main(String[] args)
 			throws LibraryParseException, NoChildrenException, IOException
 	{
-		long availableCapacityBytes = 50 * FileUtils.ONE_GB;
-		File deviceRoot = new File("/Volumes/chle-privat/");
+		if (args.length < 2)
+		{
+			throw new RuntimeException(
+					"Usage: Melodies2Go <Size-in-GB> </path/to/destination>");
+		}
+		
+		int gigabytes = Integer.parseInt(args[0]);
+		File destPath = new File(args[1]);
+		if (!destPath.exists())
+		{
+			throw new FileNotFoundException("Can't find " + destPath);
+		}
+
+		long availableCapacityBytes = gigabytes * FileUtils.ONE_GB;
 		
 		File itunesLibrary = findiTunesLibrary();
 
@@ -50,10 +62,10 @@ public class Melodies2Go
 		List<RatedTrack> filteredTracks = sync.compileSelection(availableCapacityBytes);
 		sync.printStatistics(filteredTracks);
 		
-		FileSync fileSync = new FileSync(filteredTracks, deviceRoot);
+		FileSync fileSync = new FileSync(filteredTracks, destPath);
 		List<SyncedTrack> syncedTracks = fileSync.sync();
 		
-		M3UWriter.writeRecentlyAdded(deviceRoot, syncedTracks);
+		M3UWriter.writeRecentlyAdded(destPath, syncedTracks);
 	}
 	
 	public static Comparator<RatedTrack> orderByRating = (t1, t2) -> Integer

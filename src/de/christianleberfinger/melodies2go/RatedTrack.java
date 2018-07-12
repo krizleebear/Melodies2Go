@@ -20,6 +20,7 @@ public class RatedTrack extends Track
 	private static final String FIELD_DATE_ADDED = "Date Added";
 	private static final String FIELD_PLAY_COUNT = "Play Count";
 	private static final String FIELD_TRACK_RATING = "Rating";
+	private static final String FIELD_TRACK_NUMBER = "Track Number";
 	
 	// example: Fri Feb 19 17:28:39 CET 2016
 	private static ThreadLocalDateParser dateParser = new ThreadLocalDateParser(
@@ -43,7 +44,7 @@ public class RatedTrack extends Track
 	
 	public String getAlbum()
 	{
-		return getAdditionalInfo("Album");
+		return getAdditionalInfo("Album", "");
 	}
 	
 	public String getAlbumArtist()
@@ -113,12 +114,23 @@ public class RatedTrack extends Track
 		return getAdditionalTrackInfo().getAdditionalInfo(key);
 	}
 	
+	public String getAdditionalInfo(String key, String defaultValue)
+	{
+		String value = getAdditionalInfo(key);
+		if (value == null)
+		{
+			return defaultValue;
+		}
+
+		return value;
+	}
+
 	public int getAdditionalInfoInteger(String key, int defaultValue)
 	{
 		String value = getAdditionalInfo(key);
 		if (value == null || value.length() < 1)
 		{
-			return 0;
+			return defaultValue;
 		}
 
 		try
@@ -161,6 +173,11 @@ public class RatedTrack extends Track
 	public String getTitle()
 	{
 		return getTrackName();
+	}
+	
+	public int getTrackNumber()
+	{
+		return getAdditionalInfoInteger(FIELD_TRACK_NUMBER, 0);
 	}
 
 	/**

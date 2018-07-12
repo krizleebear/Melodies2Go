@@ -39,7 +39,7 @@ public class FileSync
 	public static class SyncedTrack
 	{
 		public final RatedTrack track;
-		public final File destFile;
+		private final File destFile;
 
 		public SyncedTrack(RatedTrack track, File destFile)
 		{
@@ -47,12 +47,62 @@ public class FileSync
 			this.destFile = destFile;
 		}
 		
+		public File getDestFile()
+		{
+			return destFile;
+		}
+		
 		public static Comparator<SyncedTrack> orderByDateAdded = (t1, t2) -> t1
 				.getDateAdded().compareTo(t2.getDateAdded());
-
-		private Date getDateAdded()
+		
+		public Date getDateAdded()
 		{
 			return track.getDateAdded();
+		}
+		
+		public String getAlbum()
+		{
+			return track.getAlbum();
+		}
+		
+		public int getTrackNumber()
+		{
+			return track.getTrackNumber();
+		}
+		
+		public String toString()
+		{
+			return getDestFile().toString();
+		}
+
+		@Override
+		public int hashCode()
+		{
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((getDestFile() == null) ? 0 : getDestFile().hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			SyncedTrack other = (SyncedTrack) obj;
+			if (getDestFile() == null)
+			{
+				if (other.getDestFile() != null)
+					return false;
+			}
+			else if (!getDestFile().equals(other.getDestFile()))
+				return false;
+			return true;
 		}
 	}
 	
