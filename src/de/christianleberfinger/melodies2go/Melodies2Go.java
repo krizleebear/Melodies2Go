@@ -10,20 +10,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.xml.sax.SAXException;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
-import com.gps.itunes.lib.exceptions.LibraryParseException;
-import com.gps.itunes.lib.exceptions.NoChildrenException;
-import com.gps.itunes.lib.items.tracks.Track;
-import com.gps.itunes.lib.parser.ItunesLibraryParsedData;
-import com.gps.itunes.lib.parser.ItunesLibraryParser;
-import com.gps.itunes.lib.parser.utils.PropertyManager;
-import com.gps.itunes.lib.tasks.LibraryParser;
 
 import de.christianleberfinger.melodies2go.FileSync.SyncedTrack;
+import de.christianleberfinger.melodies2go.parser.ITrack;
+import de.christianleberfinger.melodies2go.parser.ITunesXMLParser;
+import de.christianleberfinger.melodies2go.parser.Tracks;
 import de.christianleberfinger.melodies2go.utils.CombinedIterator;
 
 /**
@@ -37,7 +34,7 @@ import de.christianleberfinger.melodies2go.utils.CombinedIterator;
 public class Melodies2Go
 {
 	public static void main(String[] args)
-			throws LibraryParseException, NoChildrenException, IOException
+			throws SAXException, IOException
 	{
 		if (args.length < 2)
 		{
@@ -59,7 +56,7 @@ public class Melodies2Go
 		Melodies2Go sync = new Melodies2Go();
 		sync.readiTunesLibrary(itunesLibrary);
 		
-		List<RatedTrack> filteredTracks = sync.compileSelection(availableCapacityBytes);
+		List<ITrack> filteredTracks = sync.compileSelection(availableCapacityBytes);
 		sync.printStatistics(filteredTracks);
 		
 		FileSync fileSync = new FileSync(filteredTracks, destPath);
@@ -68,43 +65,29 @@ public class Melodies2Go
 		M3UWriter.writeRecentlyAdded(destPath, syncedTracks);
 	}
 	
-	public static Comparator<RatedTrack> orderByRating = (t1, t2) -> Integer
+	public static Comparator<ITrack> orderByRating = (t1, t2) -> Integer
 			.compare(t1.getRating(), t2.getRating());
 
-	public static Comparator<RatedTrack> orderByPlayCount = (t1, t2) -> Integer
+	public static Comparator<ITrack> orderByPlayCount = (t1, t2) -> Integer
 			.compare(t1.getPlayCount(), t2.getPlayCount());
 
-	public static Comparator<RatedTrack> orderByDateAdded = (t1, t2) -> t1
+	public static Comparator<ITrack> orderByDateAdded = (t1, t2) -> t1
 			.getDateAdded().compareTo(t2.getDateAdded());
 	
-	private List<RatedTrack> allTracks;
+	private List<ITrack> allTracks;
 
 	/**
 	 * Find all music tracks in iTunes Library that can be found on disk. Movies
 	 * and non existing files are being ignored.
 	 * 
-	 * @throws LibraryParseException
-	 * @throws NoChildrenException
+	 * @throws SAXException 
 	 */
-	public void readiTunesLibrary(File itunesLibrary) throws LibraryParseException, NoChildrenException
+	public void readiTunesLibrary(File itunesLibrary) throws IOException, SAXException
 	{
-		ItunesLibraryParser itunesLibraryParser = new LibraryParser();
-
-		String libraryFilePath = itunesLibrary.getAbsolutePath();
-		itunesLibraryParser.addParseConfiguration(
-				PropertyManager.Property.LIBRARY_FILE_LOCATION_PROPERTY
-						.getKey(),
-				libraryFilePath);
-		ItunesLibraryParsedData itunesLibraryParsedData = itunesLibraryParser
-				.parse();
-
-		Track[] tracks = itunesLibraryParsedData.getAllTracks();
-
-		List<RatedTrack> trackList = new ArrayList<>(tracks.length);
-		for (Track track : tracks)
+		Tracks tracks = ITunesXMLParser.parseLibrary(itunesLibrary);
+		List<ITrack> filteredTracks = new ArrayList<>(tracks.size());
+		for(ITrack ratedTrack : tracks)
 		{
-			final RatedTrack ratedTrack = new RatedTrack(track);
-
 			// ignore tracks without valid file information
 			File trackFile = ratedTrack.getFile();
 			if (trackFile == null || !trackFile.exists()
@@ -114,7 +97,7 @@ public class Melodies2Go
 			}
 
 			// ignore movies
-			if (ratedTrack.isMovie())
+			if (ratedTrack.hasVideo())
 			{
 				continue;
 			}
@@ -125,12 +108,12 @@ public class Melodies2Go
 				continue;
 			}
 
-			trackList.add(ratedTrack);
+			filteredTracks.add(ratedTrack);
 		}
 
-		this.allTracks = trackList;
+		this.allTracks = filteredTracks;
 	}
-	
+
 	/**
 	 * Compile a list of the best and most recent songs.
 	 * 
@@ -141,19 +124,19 @@ public class Melodies2Go
 	 * @return
 	 * @throws IOException
 	 */
-	public List<RatedTrack> compileSelection(long availableCapacityBytes) throws IOException
+	public List<ITrack> compileSelection(long availableCapacityBytes) throws IOException
 	{
-		List<RatedTrack> bestRated = sortList(allTracks, orderByRating.reversed());
-		List<RatedTrack> mostPlayed = sortList(allTracks, orderByPlayCount.reversed());
-		List<RatedTrack> recentlyAdded = sortList(allTracks, orderByDateAdded.reversed());
+		List<ITrack> bestRated = sortList(allTracks, orderByRating.reversed());
+		List<ITrack> mostPlayed = sortList(allTracks, orderByPlayCount.reversed());
+		List<ITrack> recentlyAdded = sortList(allTracks, orderByDateAdded.reversed());
 
 		long fileSizeSum = 0;
 
-		CombinedIterator<RatedTrack> combinedIterator = new CombinedIterator<>(bestRated, recentlyAdded, mostPlayed);
-		LinkedHashSet<RatedTrack> combinedList = new LinkedHashSet<>();
+		CombinedIterator<ITrack> combinedIterator = new CombinedIterator<>(bestRated, recentlyAdded, mostPlayed);
+		LinkedHashSet<ITrack> combinedList = new LinkedHashSet<>();
 		while(combinedIterator.hasNext())
 		{
-			RatedTrack track = combinedIterator.next();
+			ITrack track = combinedIterator.next();
 			File trackFile = track.getFile();
 			final long fileSize = trackFile.length();
 
@@ -170,20 +153,20 @@ public class Melodies2Go
 			}
 		}
 		
-		return new ArrayList<RatedTrack>(combinedList);
+		return new ArrayList<ITrack>(combinedList);
 	}
 	
-	private static List<RatedTrack> sortList(
-			List<RatedTrack> trackList,
-			Comparator<RatedTrack> comparator)
+	private static List<ITrack> sortList(
+			List<ITrack> trackList,
+			Comparator<ITrack> comparator)
 	{
-		List<RatedTrack> sorted = new ArrayList<>(trackList);
+		List<ITrack> sorted = new ArrayList<>(trackList);
 		sorted.sort(comparator);
 
 		return sorted;
 	}
 
-	private void printStatistics(List<RatedTrack> filteredTracks)
+	private void printStatistics(List<ITrack> filteredTracks)
 	{
 		System.out.println("Number of tracks: " + filteredTracks.size());
 		
@@ -191,7 +174,7 @@ public class Melodies2Go
 		Multiset<String> years = HashMultiset.create();
 		Multiset<String> genres = HashMultiset.create();
 
-		for (RatedTrack track : filteredTracks)
+		for (ITrack track : filteredTracks)
 		{
 			if (track.getArtist() != null)
 			{

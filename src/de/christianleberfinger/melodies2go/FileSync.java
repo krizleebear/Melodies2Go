@@ -23,14 +23,16 @@ import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.NotFileFilter;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
 
+import de.christianleberfinger.melodies2go.parser.ITrack;
+
 public class FileSync
 {
-	private final List<RatedTrack> tracks;
+	private final List<ITrack> tracks;
 	private final File destDir;
 
-	private Map<File, RatedTrack> trackFiles = new TreeMap<>();
+	private Map<File, ITrack> trackFiles = new TreeMap<>();
 
-	public FileSync(List<RatedTrack> tracks, File destDir)
+	public FileSync(List<ITrack> tracks, File destDir)
 	{
 		this.tracks = tracks;
 		this.destDir = destDir;
@@ -38,10 +40,10 @@ public class FileSync
 
 	public static class SyncedTrack
 	{
-		public final RatedTrack track;
+		public final ITrack track;
 		private final File destFile;
 
-		public SyncedTrack(RatedTrack track, File destFile)
+		public SyncedTrack(ITrack track, File destFile)
 		{
 			this.track = track;
 			this.destFile = destFile;
@@ -129,7 +131,7 @@ public class FileSync
 	private List<SyncedTrack> fillMap()
 	{
 		List<SyncedTrack> expectedTracks = new ArrayList<>(tracks.size());
-		for (RatedTrack track : tracks)
+		for (ITrack track : tracks)
 		{
 			if (track.getFile() != null)
 			{
@@ -150,7 +152,7 @@ public class FileSync
 	 * @param track
 	 * @return
 	 */
-	public File getDestFile(RatedTrack track)
+	public File getDestFile(ITrack track)
 	{
 		List<String> pathElements = new ArrayList<>();
 
@@ -247,9 +249,9 @@ public class FileSync
 	
 	private void copyMissingFiles() throws IOException
 	{
-		for (Entry<File, RatedTrack> entry : trackFiles.entrySet())
+		for (Entry<File, ITrack> entry : trackFiles.entrySet())
 		{
-			RatedTrack track = entry.getValue();
+			ITrack track = entry.getValue();
 			File destFile = entry.getKey();
 
 			if (!destFile.exists())
@@ -274,11 +276,12 @@ public class FileSync
 	 * @param destFile
 	 * @throws IOException
 	 */
-	private void copyFile(RatedTrack track, File destFile) throws IOException
+	private void copyFile(ITrack track, File destFile) throws IOException
 	{
 		TempFile tempFile = new TempFile(destFile);
 		try
 		{
+			System.out.println("Copying " + destFile);
 			FileUtils.copyFile(track.getFile(), tempFile);
 			tempFile.renameToOriginal();
 		}
