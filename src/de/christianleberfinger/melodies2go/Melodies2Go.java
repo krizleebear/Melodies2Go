@@ -5,9 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -22,7 +20,6 @@ import de.christianleberfinger.melodies2go.FileSync.SyncedTrack;
 import de.christianleberfinger.melodies2go.parser.ITrack;
 import de.christianleberfinger.melodies2go.parser.ITunesXMLParser;
 import de.christianleberfinger.melodies2go.parser.Tracks;
-import de.christianleberfinger.melodies2go.utils.CombinedIterator;
 import de.christianleberfinger.melodies2go.utils.TSVExport;
 
 /**
@@ -52,21 +49,20 @@ public class Melodies2Go
 		File itunesLibrary = findiTunesLibrary();
 
 		Melodies2Go sync = new Melodies2Go();
-		sync.readiTunesLibrary(itunesLibrary);
+		List<ITrack> allTracks = sync.readiTunesLibrary(itunesLibrary);
 		
-		List<ITrack> filteredTracks = sync.compileSelection(availableCapacityBytes);
-		sync.printStatistics(filteredTracks);
+		List<ITrack> selectedTracks = TrackCompilation.compileSelection(allTracks, availableCapacityBytes);
+		selectedTracks = limitTrackNumber(selectedTracks, 10_000);
 		
-		filteredTracks = limitTrackNumber(filteredTracks, 10_000);
-		
-		TSVExport.export(filteredTracks, Paths.get("filtered_melodies.tsv"));
+		sync.printStatistics(selectedTracks);
+		TSVExport.export(selectedTracks, Paths.get("filtered_melodies.tsv"));
 		
 		if (!destPath.exists())
 		{
 			throw new FileNotFoundException("Can't find " + destPath);
 		}
 
-		FileSync fileSync = new FileSync(filteredTracks, destPath);
+		FileSync fileSync = new FileSync(selectedTracks, destPath);
 		List<SyncedTrack> syncedTracks = fileSync.sync();
 		
 		M3UWriter.writeRecentlyAdded(destPath, syncedTracks);
@@ -78,24 +74,14 @@ public class Melodies2Go
 		return tracks.subList(0, toIndex);
 	}
 
-	public static Comparator<ITrack> orderByRating = (t1, t2) -> Integer
-			.compare(t1.getRating(), t2.getRating());
-
-	public static Comparator<ITrack> orderByPlayCount = (t1, t2) -> Integer
-			.compare(t1.getPlayCount(), t2.getPlayCount());
-
-	public static Comparator<ITrack> orderByDateAdded = (t1, t2) -> t1
-			.getDateAdded().compareTo(t2.getDateAdded());
-	
-	private List<ITrack> allTracks;
-
 	/**
 	 * Find all music tracks in iTunes Library that can be found on disk. Movies
 	 * and non existing files are being ignored.
+	 * @return 
 	 * 
 	 * @throws SAXException 
 	 */
-	public void readiTunesLibrary(File itunesLibrary) throws IOException, SAXException
+	public List<ITrack> readiTunesLibrary(File itunesLibrary) throws IOException, SAXException
 	{
 		Tracks tracks = ITunesXMLParser.parseLibrary(itunesLibrary);
 		List<ITrack> filteredTracks = new ArrayList<>(tracks.size());
@@ -124,59 +110,7 @@ public class Melodies2Go
 			filteredTracks.add(ratedTrack);
 		}
 
-		this.allTracks = filteredTracks;
-	}
-
-	/**
-	 * Compile a list of the best and most recent songs.
-	 * 
-	 * Uses three intermediate sorted lists (sorted by date, by rating, by play
-	 * count) and combine them to get a relevant subset of the full library.
-	 * 
-	 * @param availableCapacityBytes
-	 * @return
-	 * @throws IOException
-	 */
-	public List<ITrack> compileSelection(long availableCapacityBytes) throws IOException
-	{
-		List<ITrack> bestRated = sortList(allTracks, orderByRating.reversed());
-		List<ITrack> mostPlayed = sortList(allTracks, orderByPlayCount.reversed());
-		List<ITrack> recentlyAdded = sortList(allTracks, orderByDateAdded.reversed());
-
-		long fileSizeSum = 0;
-
-		CombinedIterator<ITrack> combinedIterator = new CombinedIterator<>(bestRated, recentlyAdded, mostPlayed);
-		LinkedHashSet<ITrack> combinedList = new LinkedHashSet<>();
-		while(combinedIterator.hasNext())
-		{
-			ITrack track = combinedIterator.next();
-			File trackFile = track.getFile();
-			final long fileSize = trackFile.length();
-
-			// skip files that would exceed quota
-			if (fileSize + fileSizeSum > availableCapacityBytes)
-			{
-				continue;
-			}
-			
-			boolean wasAdded = combinedList.add(track);
-			if (wasAdded)
-			{
-				fileSizeSum += fileSize;
-			}
-		}
-		
-		return new ArrayList<ITrack>(combinedList);
-	}
-	
-	private static List<ITrack> sortList(
-			List<ITrack> trackList,
-			Comparator<ITrack> comparator)
-	{
-		List<ITrack> sorted = new ArrayList<>(trackList);
-		sorted.sort(comparator);
-
-		return sorted;
+		return filteredTracks;
 	}
 
 	private void printStatistics(List<ITrack> filteredTracks)
