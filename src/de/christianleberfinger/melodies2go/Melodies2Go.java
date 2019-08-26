@@ -3,6 +3,7 @@ package de.christianleberfinger.melodies2go;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -22,6 +23,7 @@ import de.christianleberfinger.melodies2go.parser.ITrack;
 import de.christianleberfinger.melodies2go.parser.ITunesXMLParser;
 import de.christianleberfinger.melodies2go.parser.Tracks;
 import de.christianleberfinger.melodies2go.utils.CombinedIterator;
+import de.christianleberfinger.melodies2go.utils.TSVExport;
 
 /**
  * Melodies2Go is a tool to assemble relevant subsets of your iTunes music collection.
@@ -44,10 +46,6 @@ public class Melodies2Go
 		
 		int gigabytes = Integer.parseInt(args[0]);
 		File destPath = new File(args[1]);
-		if (!destPath.exists())
-		{
-			throw new FileNotFoundException("Can't find " + destPath);
-		}
 
 		long availableCapacityBytes = gigabytes * FileUtils.ONE_GB;
 		
@@ -59,12 +57,27 @@ public class Melodies2Go
 		List<ITrack> filteredTracks = sync.compileSelection(availableCapacityBytes);
 		sync.printStatistics(filteredTracks);
 		
+		filteredTracks = limitTrackNumber(filteredTracks, 10_000);
+		
+		TSVExport.export(filteredTracks, Paths.get("filtered_melodies.tsv"));
+		
+		if (!destPath.exists())
+		{
+			throw new FileNotFoundException("Can't find " + destPath);
+		}
+
 		FileSync fileSync = new FileSync(filteredTracks, destPath);
 		List<SyncedTrack> syncedTracks = fileSync.sync();
 		
 		M3UWriter.writeRecentlyAdded(destPath, syncedTracks);
 	}
 	
+	public static <T> List<T> limitTrackNumber(List<T> tracks, int maxCount) {
+
+		int toIndex = Math.min(maxCount, tracks.size());
+		return tracks.subList(0, toIndex);
+	}
+
 	public static Comparator<ITrack> orderByRating = (t1, t2) -> Integer
 			.compare(t1.getRating(), t2.getRating());
 

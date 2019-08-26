@@ -114,7 +114,7 @@ public class FileSync
 	public List<SyncedTrack> sync() throws IOException
 	{
 		System.out.println("Calculating changes to destination file system.");
-		List<SyncedTrack> expectedTracks = fillMap();
+		List<SyncedTrack> expectedTracks = getDestinationFiles();
 
 		System.out.println("Deleting dispensable files");
 		deleteDispensableFiles();
@@ -128,7 +128,7 @@ public class FileSync
 		return expectedTracks;
 	}
 
-	private List<SyncedTrack> fillMap()
+	private List<SyncedTrack> getDestinationFiles()
 	{
 		List<SyncedTrack> expectedTracks = new ArrayList<>(tracks.size());
 		for (ITrack track : tracks)
@@ -172,10 +172,24 @@ public class FileSync
 
 		pathElements.add(track.getFile().getName());
 
+		// replace invalid characters for the target file system (such as /)
+		sanitizePathElements(pathElements);
+
 		Path p = Paths.get(destDir.getAbsolutePath(),
 				pathElements.toArray(new String[] {}));
 
 		return p.toFile();
+	}
+
+	public static void sanitizePathElements(List<String> pathElements) {
+
+		pathElements.replaceAll(FileSync::sanitizeFilename);
+		
+	}
+	
+	public static String sanitizeFilename(String name)
+	{
+		return name.replaceAll("[/\\\\]", "_");
 	}
 
 	private String getInitialCharacterFolder(final String artist)
@@ -256,11 +270,6 @@ public class FileSync
 
 			if (!destFile.exists())
 			{
-				if (destFile.getParentFile().exists())
-				{
-					FileUtils.forceMkdir(destFile.getParentFile());
-				}
-
 				copyFile(track, destFile);
 			}
 		}
@@ -269,8 +278,10 @@ public class FileSync
 	/**
 	 * Copy the given track to its destination path. Copying will be performed
 	 * via temporary file. In case of errors during copying, this temporary file
-	 * will be deleted. In case of sudden program exit, the temporary file will
+	 * will be deleted. In case of sudden program exit, the temporary file might
 	 * stay and will be deleted by the next run of sync().
+	 * 
+	 * All needed parent directories will be created.
 	 * 
 	 * @param track
 	 * @param destFile
@@ -278,17 +289,13 @@ public class FileSync
 	 */
 	private void copyFile(ITrack track, File destFile) throws IOException
 	{
-		TempFile tempFile = new TempFile(destFile);
-		try
+		FileUtils.forceMkdir(destFile.getParentFile());
+		
+		try(TempFile tempFile = new TempFile(destFile))
 		{
 			System.out.println("Copying " + destFile);
 			FileUtils.copyFile(track.getFile(), tempFile);
 			tempFile.renameToOriginal();
-		}
-		catch (IOException e)
-		{
-			tempFile.delete();
-			throw e;
 		}
 	}
 }

@@ -27,8 +27,7 @@ public class TestITunesXMLParser
 	@Test
 	public void testNoPlayCount()
 	{
-		String xml = "<plist version=\"1.0\">\n" + 
-				"<dict>\n" + 
+		String xml = "<dict>\n" + 
 				"	<key>Tracks</key>\n" + 
 				"	<dict>\n" + 
 				"		<key>4445</key>\n" + 
@@ -36,8 +35,7 @@ public class TestITunesXMLParser
 				"			<key>Location</key><string>file:///Users/me/bla.mp3</string>\n" + 
 				"		</dict>\n" + 
 				"	</dict>\n" + 
-				"</dict>\n" + 
-				"</plist>";
+				"</dict>";
 		
 		ITrack track = parseTrack(xml);
 		assertEquals(0, track.getPlayCount());
@@ -46,8 +44,7 @@ public class TestITunesXMLParser
 	@Test
 	public void testRating()
 	{
-		String xml = "<plist version=\"1.0\">\n" + 
-				"<dict>\n" + 
+		String xml = "<dict>\n" + 
 				"	<key>Tracks</key>\n" + 
 				"	<dict>\n" + 
 				"		<key>4445</key>\n" + 
@@ -56,12 +53,47 @@ public class TestITunesXMLParser
 				"			<key>Location</key><string>file:///Users/me/bla.mp3</string>\n" + 
 				"		</dict>\n" + 
 				"	</dict>\n" + 
-				"</dict>\n" + 
-				"</plist>";
+				"</dict>";
 		
 		ITrack track = parseTrack(xml);
 		assertEquals(60, track.getRating());
 		assertEquals(0, track.getPlayCount());
 	}
 	
+	@Test
+	public void testYear()
+	{
+		String xml = "<dict>\n" + 
+				"	<key>Tracks</key>\n" + 
+				"	<dict>\n" + 
+				"		<key>4445</key>\n" + 
+				"		<dict>\n" + 
+				"			<key>Year</key><integer>2002</integer>" + 
+				"			<key>Location</key><string>file:///Users/me/bla.mp3</string>\n" + 
+				"		</dict>\n" + 
+				"	</dict>\n" + 
+				"</dict>";
+		
+		ITrack track = parseTrack(xml);
+		assertEquals("2002", track.getYear());
+	}
+	
+	@Test
+	public void testPersistentID()
+	{
+		String xml = "<dict>\n" + 
+				"	<key>Tracks</key>\n" + 
+				"	<dict>\n" + 
+				"		<key>4445</key>\n" + 
+				"		<dict>\n" + 
+				"			<key>Persistent ID</key><string>12345678DE9AE008</string>" + 
+				"			<key>Location</key><string>file:///Users/me/bla.mp3</string>\n" + 
+				"		</dict>\n" + 
+				"	</dict>\n" + 
+				"</dict>";
+		
+		ITrack track = parseTrack(xml);
+//		assertEquals("12345678DE9AE008", track.getPersistentID());
+	}
+
 }
