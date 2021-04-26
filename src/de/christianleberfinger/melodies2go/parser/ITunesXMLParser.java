@@ -43,7 +43,6 @@ public class ITunesXMLParser extends DefaultHandler
 			String localName,
 			String qName,
 			Attributes atts)
-			throws SAXException
 	{
 		switch (qName)
 		{
@@ -69,7 +68,6 @@ public class ITunesXMLParser extends DefaultHandler
 
 	@Override
 	public void endElement(String uri, String localName, String qName)
-			throws SAXException
 	{
 		if (inTracks && dictLevel == 3 && "dict".equals(qName))
 		{
@@ -145,6 +143,9 @@ public class ITunesXMLParser extends DefaultHandler
 		case "Rating":
 			trackBuilder.trackRating((int) value);
 			break;
+			case "Year":
+			trackBuilder.year(Long.toString(value));
+			break;
 		case "Play Count":
 			trackBuilder.playCount((int) value);
 			break;
@@ -199,7 +200,7 @@ public class ITunesXMLParser extends DefaultHandler
 	}
 
 	@Override
-	public void characters(char[] ch, int start, int length) throws SAXException
+	public void characters(char[] ch, int start, int length)
 	{
 		buffer.append(ch, start, length);
 	}
