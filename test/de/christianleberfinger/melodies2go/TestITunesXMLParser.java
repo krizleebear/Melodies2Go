@@ -1,15 +1,16 @@
 package de.christianleberfinger.melodies2go;
 
-import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
 import de.christianleberfinger.melodies2go.parser.ITrack;
 import de.christianleberfinger.melodies2go.parser.ITunesXMLParser;
 import de.christianleberfinger.melodies2go.parser.Tracks;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestITunesXMLParser
 {

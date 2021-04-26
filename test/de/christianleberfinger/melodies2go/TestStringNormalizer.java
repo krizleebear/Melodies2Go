@@ -1,18 +1,18 @@
 package de.christianleberfinger.melodies2go;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
 
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestStringNormalizer
 {
 
-	@Before
-	public void setUp() throws Exception
+	@BeforeEach
+	public void setUp()
 	{
 	}
 
@@ -25,9 +25,6 @@ public class TestStringNormalizer
 		String decomposed = "Prügelknabe";
 		assertNotEquals("Prügelknabe".length(), decomposed.length());
 		
-//		assertTrue(Normalizer.isNormalized(b, Form.NFC));
-		
-		assertFalse(decomposed.equals("Prügelknabe"));
 		assertFalse(decomposed.contentEquals("Prügelknabe"));
 		
 		assertNotEquals("Prügelknabe", decomposed);

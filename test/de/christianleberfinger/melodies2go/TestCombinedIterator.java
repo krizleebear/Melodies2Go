@@ -1,14 +1,13 @@
 package de.christianleberfinger.melodies2go;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
-
-import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
 import de.christianleberfinger.melodies2go.utils.CombinedIterator;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestCombinedIterator
 {
@@ -29,7 +28,7 @@ public class TestCombinedIterator
 		ArrayList<String> list1 = Lists.newArrayList("A");
 		ArrayList<String> list2 = Lists.newArrayList("B");
 		ArrayList<String> list3 = Lists.newArrayList("C");
-		CombinedIterator<String> ci = new CombinedIterator<String>(list1, list2,
+		CombinedIterator<String> ci = new CombinedIterator<>(list1, list2,
 				list3);
 
 		String elements = collectElements(ci);
@@ -42,7 +41,7 @@ public class TestCombinedIterator
 		ArrayList<String> list1 = Lists.newArrayList("A", "C", "D");
 		ArrayList<String> list2 = Lists.newArrayList("B");
 		ArrayList<String> list3 = Lists.newArrayList("");
-		CombinedIterator<String> ci = new CombinedIterator<String>(list1, list2,
+		CombinedIterator<String> ci = new CombinedIterator<>(list1, list2,
 				list3);
 
 		String elements = collectElements(ci);
@@ -55,7 +54,7 @@ public class TestCombinedIterator
 		ArrayList<String> list1 = Lists.newArrayList("A", "D");
 		ArrayList<String> list2 = Lists.newArrayList("B");
 		ArrayList<String> list3 = Lists.newArrayList("C");
-		CombinedIterator<String> ci = new CombinedIterator<String>(list1, list2,
+		CombinedIterator<String> ci = new CombinedIterator<>(list1, list2,
 				list3);
 
 		String elements = collectElements(ci);
@@ -68,7 +67,7 @@ public class TestCombinedIterator
 		ArrayList<String> list1 = Lists.newArrayList();
 		ArrayList<String> list2 = Lists.newArrayList("A", "C");
 		ArrayList<String> list3 = Lists.newArrayList("B", "D");
-		CombinedIterator<String> ci = new CombinedIterator<String>(list1, list2,
+		CombinedIterator<String> ci = new CombinedIterator<>(list1, list2,
 				list3);
 
 		String elements = collectElements(ci);
