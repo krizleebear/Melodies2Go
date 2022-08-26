@@ -38,6 +38,6 @@ public class TempFile extends File implements AutoCloseable
 
 	@Override
 	public void close() throws IOException {
-		FileUtils.forceDelete(this);
+		FileUtils.deleteQuietly(this);
 	}
 }

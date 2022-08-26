@@ -168,7 +168,9 @@ public class Melodies2Go
 			}
 		}
 		
-		throw new FileNotFoundException("iTunes lib wasn't found in " + homeDir);
+		throw new FileNotFoundException("iTunes lib wasn't found in " + homeDir + ". " +
+				"Note: Apple Music doesn't automatically export the library as XML file. " +
+				"You have to do so manually.");
 	}
 	
 	
