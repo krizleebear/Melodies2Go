@@ -2,6 +2,7 @@ package de.christianleberfinger.melodies2go;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Normalizer;
@@ -270,7 +271,13 @@ public class FileSync
 
 			if (!destFile.exists())
 			{
-				copyFile(track, destFile);
+				try {
+					copyFile(track, destFile);
+				} catch (FileSystemException fse) {
+					// sometimes, music files just can't be copied, even with 'cp' on terminal.
+					// just ignore those files and print an error, as this should be a rare case.
+					System.err.println("Filesystem Error copying " + destFile);
+				}
 			}
 		}
 	}
