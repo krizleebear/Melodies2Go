@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +48,7 @@ public class Melodies2Go
 		long availableCapacityBytes = gigabytes * FileUtils.ONE_GB;
 		
 		File itunesLibrary = findiTunesLibrary();
+		checkIfUpToDate(itunesLibrary);
 
 		Melodies2Go sync = new Melodies2Go();
 		List<ITrack> allTracks = sync.readiTunesLibrary(itunesLibrary);
@@ -67,7 +69,23 @@ public class Melodies2Go
 		
 		M3UWriter.writeRecentlyAdded(destPath, syncedTracks);
 	}
-	
+
+	/**
+	 * Apple Music doesn't automatically export the library as XML file.
+	 * You have export manually via "File > Library > Export Library ...".
+	 *
+	 * This method detects suspiciously old library files and prints a warning.
+	 *
+	 * @param itunesLibrary
+	 */
+	protected static void checkIfUpToDate(File itunesLibrary) {
+		long fileAgeMillis = System.currentTimeMillis() - itunesLibrary.lastModified();
+		final long oneDayMillis = Duration.ofDays(1).toMillis();
+		if (fileAgeMillis > oneDayMillis) {
+			System.err.println(itunesLibrary.getAbsolutePath() + " seems not up to date. Maybe you need to export it manually in Apple Music?");
+		}
+	}
+
 	public static <T> List<T> limitTrackNumber(List<T> tracks, int maxCount) {
 
 		int toIndex = Math.min(maxCount, tracks.size());
@@ -162,7 +180,8 @@ public class Melodies2Go
 		while(files.hasNext())
 		{
 			File file = files.next();
-			if(file.getName().equals("iTunes Library.xml"))
+			if (file.getName().equals("iTunes Library.xml") // iTunes classic
+					|| file.getName().equals("Library.xml"))  // Apple Music
 			{
 				return file;
 			}
